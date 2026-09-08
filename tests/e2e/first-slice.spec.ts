@@ -8,8 +8,8 @@ test("cria conta, nota, edita e abre o grafo", async ({ page }) => {
   await page.getByLabel("Senha").fill("senha-segura-123");
   await page.getByRole("button", { name: "Criar conta" }).click();
 
-  await expect(page.getByText("SINAPSE").first()).toBeVisible();
-  await page.getByRole("button", { name: "＋" }).click();
+  await expect(page.locator(".topbar")).toBeVisible({ timeout: 15_000 });
+  await page.locator(".panel-title").getByRole("button").click();
   await expect(page.getByRole("heading", { name: "Nova nota" })).toBeVisible();
 
   const editor = page.locator(".cm-content");

@@ -26,7 +26,7 @@ jobs:
       DATABASE_URL: postgresql://sinapse:sinapse@127.0.0.1:5432/sinapse_test
       TEST_DATABASE_URL: postgresql://sinapse:sinapse@127.0.0.1:5432/sinapse_test
       BETTER_AUTH_SECRET: ci-only-secret-with-at-least-32-characters
-      BETTER_AUTH_URL: http://127.0.0.1:3000
+      BETTER_AUTH_URL: http://localhost:3000
       AI_PROVIDER: fake
     steps:
       - uses: actions/checkout@v4
