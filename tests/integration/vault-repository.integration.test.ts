@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const databaseUrl = process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL;
@@ -43,7 +44,7 @@ describeWithDatabase("vault repository with PostgreSQL", () => {
       path: "Historia/Roma Antiga.md",
       title: "Roma Antiga",
       normalizedTitle: "roma antiga",
-      contentMarkdown: "# Roma Antiga",
+      contentMarkdown: "# Roma Antiga\n\nConteúdo manual preservado.",
       tags: ["historia"],
       links: [],
     });
@@ -126,5 +127,27 @@ describeWithDatabase("vault repository with PostgreSQL", () => {
       links: [{ targetText: "Alex", targetNormalized: "alex", alias: null, occurrenceCount: 1 }],
     });
     expect(source.outgoing[0]?.targetNoteId).toBeNull();
+  });
+
+  it("processa e confirma ingestão de forma idempotente preservando conteúdo anterior", async () => {
+    const { IngestionService } = await import("@/server/services/ingestion/ingestion-service");
+    const service = new IngestionService();
+    const text = await readFile("fixtures/professor-historia.md", "utf8");
+    const proposal = await service.createProposal({ userId: userA }, { vaultId: vaultA, mode: "expand", sourceName: "Fixture professor", text });
+    expect(proposal.status).toBe("awaiting_review");
+    expect(proposal.proposal?.notes.map((note) => note.kind)).toEqual(expect.arrayContaining(["project", "area", "knowledge", "source", "decision", "action"]));
+    const selected = proposal.proposal?.notes.filter((note) => note.operation !== "possible_duplicate").map((note) => note.temporaryId) ?? [];
+    const committed = await service.commit({ userId: userA }, proposal.ingestionId, { selectedTemporaryIds: selected });
+    expect(committed.status).toBe("committed");
+    const countAfterFirstCommit = (await repository.listNotes({ userId: userA }, vaultA)).length;
+
+    const repeated = await service.createProposal({ userId: userA }, { vaultId: vaultA, mode: "expand", sourceName: "Fixture repetida", text });
+    const repeatedCommit = await service.commit({ userId: userA }, repeated.ingestionId, { selectedTemporaryIds: selected });
+    expect(repeated.ingestionId).toBe(proposal.ingestionId);
+    expect(repeatedCommit.commitResult).toEqual(committed.commitResult);
+    expect((await repository.listNotes({ userId: userA }, vaultA)).length).toBe(countAfterFirstCommit);
+
+    const roma = (await repository.listNotes({ userId: userA }, vaultA)).find((note) => note.title === "Roma Antiga");
+    expect(roma?.contentMarkdown).toContain("Conteúdo manual preservado.");
   });
 });

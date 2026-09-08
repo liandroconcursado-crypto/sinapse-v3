@@ -8,6 +8,7 @@ import { authClient } from "@/lib/auth-client";
 import { CodeEditor } from "@/components/editor/code-editor";
 import { MarkdownPreview } from "@/components/editor/markdown-preview";
 import { GraphView } from "@/components/graph/graph-view";
+import { IngestionPanel } from "@/components/ingestion/ingestion-panel";
 
 type VaultPayload = { vaultId: string; notes: NoteRecord[] };
 
@@ -25,6 +26,7 @@ export function WorkspaceShell({ userName }: { userName: string }) {
   const client = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showGraph, setShowGraph] = useState(false);
+  const [showIngestion, setShowIngestion] = useState(false);
   const vault = useQuery({ queryKey: ["vault"], queryFn: () => jsonRequest<VaultPayload>("/api/vault") });
   const vaultId = vault.data?.vaultId;
   const activeSelectedId = selectedId ?? vault.data?.notes[0]?.id ?? null;
@@ -62,10 +64,10 @@ export function WorkspaceShell({ userName }: { userName: string }) {
         }),
       });
     },
-    onSuccess: async (note) => { await refreshVault(); setSelectedId(note.id); setShowGraph(false); },
+    onSuccess: async (note) => { await refreshVault(); setSelectedId(note.id); setShowGraph(false); setShowIngestion(false); },
   });
 
-  const openNote = useCallback((id: string) => { setSelectedId(id); setShowGraph(false); }, []);
+  const openNote = useCallback((id: string) => { setSelectedId(id); setShowGraph(false); setShowIngestion(false); }, []);
   const folders = useMemo(() => {
     const result = new Map<string, NoteRecord[]>();
     for (const note of vault.data?.notes ?? []) {
@@ -83,8 +85,8 @@ export function WorkspaceShell({ userName }: { userName: string }) {
       <header className="topbar">
         <strong className="brand">SINAPSE</strong>
         <input className="search" placeholder="Buscar no vault" aria-label="Buscar no vault" />
-        <button disabled title="Disponível na fase de ingestão">Entrada IA</button>
-        <button onClick={() => setShowGraph((current) => !current)}>{showGraph ? "Nota" : "Grafo"}</button>
+        <button onClick={() => { setShowIngestion((current) => !current); setShowGraph(false); }}>Entrada IA</button>
+        <button onClick={() => { setShowGraph((current) => !current); setShowIngestion(false); }}>{showGraph ? "Nota" : "Grafo"}</button>
         <a className="button-link" href={`/api/vault/export?vaultId=${vaultId}`}>Exportar</a>
         <button className="account" onClick={() => authClient.signOut().then(() => window.location.reload())}>{userName} · sair</button>
       </header>
@@ -98,18 +100,18 @@ export function WorkspaceShell({ userName }: { userName: string }) {
         </section>)}
       </aside>
       <section className="work-area">
-        {showGraph && graph.data ? <GraphView data={graph.data} onOpenNote={openNote} /> : detail.data ? (
+        {showIngestion && vaultId ? <IngestionPanel vaultId={vaultId} onApplied={refreshVault} /> : showGraph && graph.data ? <GraphView data={graph.data} onOpenNote={openNote} /> : detail.data ? (
           <NoteWorkspace key={detail.data.id} note={detail.data} onOpen={openNote} onCreate={(title) => create.mutate(title)} onSaved={refreshVault} />
         ) : (
           <div className="empty-note">
             <p className="eyebrow">PRIMEIRA NOTA</p>
             <h1>Jogue a bagunça aqui.<br />O SINAPSE organiza.</h1>
-            <div className="entry-modes"><button disabled>Falar</button><button onClick={() => create.mutate("Nova nota")}>Escrever</button><button disabled>Colar texto</button><button disabled>Importar arquivo</button></div>
+            <div className="entry-modes"><button disabled>Falar</button><button onClick={() => create.mutate("Nova nota")}>Escrever</button><button onClick={() => setShowIngestion(true)}>Colar texto</button><button disabled>Importar arquivo</button></div>
           </div>
         )}
       </section>
       <nav className="mobile-nav" aria-label="Navegação móvel">
-        <button>Arquivos</button><button onClick={() => setShowGraph(false)}>Nota</button><button onClick={() => setShowGraph(true)}>Grafo</button><button disabled>IA</button><button>Links</button>
+        <button>Arquivos</button><button onClick={() => { setShowGraph(false); setShowIngestion(false); }}>Nota</button><button onClick={() => { setShowGraph(true); setShowIngestion(false); }}>Grafo</button><button onClick={() => { setShowIngestion(true); setShowGraph(false); }}>IA</button><button>Links</button>
       </nav>
     </main>
   );

@@ -8,6 +8,13 @@
       "when": 1788834639479,
       "tag": "0000_nifty_the_renegades",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788874169401,
+      "tag": "0001_hard_bullseye",
+      "breakpoints": true
     }
   ]
 }

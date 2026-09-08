@@ -107,6 +107,9 @@ export const vaultNotes = pgTable(
 );
 
 export const linkKind = pgEnum("link_kind", ["wikilink", "suggested", "confirmed"]);
+export const ingestionMode = pgEnum("ingestion_mode", ["build", "expand"]);
+export const ingestionStatus = pgEnum("ingestion_status", ["received", "processing", "awaiting_review", "completed", "failed"]);
+export const aiJobStatus = pgEnum("ai_job_status", ["queued", "running", "awaiting_review", "committing", "committed", "failed", "cancelled"]);
 
 export const vaultLinks = pgTable(
   "vault_links",
@@ -126,6 +129,48 @@ export const vaultLinks = pgTable(
     index("vault_links_source_idx").on(table.sourceNoteId),
     index("vault_links_target_idx").on(table.targetNoteId),
     index("vault_links_resolve_idx").on(table.vaultId, table.targetNormalized),
+  ],
+);
+
+export const ingestions = pgTable(
+  "ingestions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    vaultId: uuid("vault_id").notNull().references(() => vaults.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+    mode: ingestionMode("mode").notNull(),
+    inputType: text("input_type").notNull().default("text"),
+    sourceName: text("source_name").notNull(),
+    contentHash: text("content_hash").notNull(),
+    rawText: text("raw_text").notNull(),
+    status: ingestionStatus("status").notNull().default("received"),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("ingestions_idempotency_unique").on(table.vaultId, table.contentHash, table.mode),
+    index("ingestions_user_vault_idx").on(table.userId, table.vaultId),
+  ],
+);
+
+export const aiJobs = pgTable(
+  "ai_jobs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    ingestionId: uuid("ingestion_id").notNull().references(() => ingestions.id, { onDelete: "cascade" }),
+    status: aiJobStatus("status").notNull().default("queued"),
+    stage: text("stage").notNull().default("received"),
+    progress: integer("progress").notNull().default(0),
+    attempts: integer("attempts").notNull().default(0),
+    provider: text("provider").notNull(),
+    model: text("model"),
+    errorCode: text("error_code"),
+    errorMessageSafe: text("error_message_safe"),
+    resultJson: jsonb("result_json").$type<Record<string, unknown>>(),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("ai_jobs_ingestion_unique").on(table.ingestionId),
+    index("ai_jobs_status_idx").on(table.status, table.stage),
   ],
 );
 

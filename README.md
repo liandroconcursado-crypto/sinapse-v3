@@ -4,7 +4,7 @@ Segundo cérebro portátil baseado em Markdown, wikilinks, backlinks, knowledge 
 
 > Jogue a bagunça aqui. O SINAPSE organiza.
 
-O primeiro corte vertical já inclui autenticação local, vault em PostgreSQL, editor Markdown, wikilinks/backlinks, grafo e exportação ZIP.
+O primeiro corte vertical já inclui autenticação local, vault em PostgreSQL, editor Markdown, wikilinks/backlinks, grafo, exportação ZIP e ingestão revisável de texto com um provider de IA determinístico.
 
 ## North Star
 
@@ -54,4 +54,4 @@ Os testes de integração exigem `TEST_DATABASE_URL` ou `DATABASE_URL` apontando
 
 ## Estado
 
-Fases 0–3 em implementação: o núcleo da primeira fatia funcional está disponível; ingestão por IA permanece para a próxima fase.
+Fases 0–4 disponíveis no primeiro corte funcional. A ingestão aceita até 200 mil caracteres, persiste o progresso do job, separa conteúdo explícito, inferido e sugerido, mostra uma proposta antes de gravar e aplica a seleção em uma transação idempotente. O provider `fake` não usa rede nem credenciais e cobre o fixture de aceite de forma determinística.
