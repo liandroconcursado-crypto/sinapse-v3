@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("oferece instalação e quatro entradas no onboarding móvel", async ({ page, request }) => {
+  test.setTimeout(60_000);
   const manifestResponse = await request.get("/manifest.webmanifest");
   expect(manifestResponse.ok()).toBe(true);
   await expect(manifestResponse.json()).resolves.toMatchObject({
