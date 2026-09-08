@@ -1,13 +1,13 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { NoteDetail, NoteRecord } from "@/domain/vault/types";
 import type { GraphProjection } from "@/server/services/graph/graph-service";
 import { authClient } from "@/lib/auth-client";
 import { CodeEditor } from "@/components/editor/code-editor";
 import { MarkdownPreview } from "@/components/editor/markdown-preview";
-import { GraphView } from "@/components/graph/graph-view";
 import { IngestionPanel } from "@/components/ingestion/ingestion-panel";
 import { QuickCapture } from "@/components/onboarding/quick-capture";
 import { InstallAppButton } from "@/components/pwa/install-app-button";
@@ -15,6 +15,11 @@ import { InstallAppButton } from "@/components/pwa/install-app-button";
 type VaultPayload = { vaultId: string; notes: NoteRecord[] };
 type MobilePane = "files" | "note" | "graph" | "ai" | "links";
 type IngestionSeed = { id: number; text: string; sourceName: string; notice?: string };
+
+const GraphView = dynamic(
+  () => import("@/components/graph/graph-view").then((module) => module.GraphView),
+  { ssr: false, loading: () => <div className="center-state">Preparando o grafo…</div> },
+);
 
 async function jsonRequest<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, init);
