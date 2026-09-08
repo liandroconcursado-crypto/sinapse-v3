@@ -25,6 +25,11 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 .auth-copy > p { color: var(--muted); max-width: 58ch; font-size: 1.08rem; }
 .entry-modes { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 2rem; }
 .entry-modes span { border-left: 2px solid var(--accent); padding: .25rem .7rem; color: #c9d3dd; }
+.quick-capture { display: grid; justify-items: center; }
+.quick-capture .entry-modes { justify-content: center; }
+.capture-message { color: var(--muted); max-width: 52ch; line-height: 1.5; }
+.recording { color: var(--danger); border-color: #754242; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .auth-form { max-width: 440px; width: 100%; padding: 2rem; border: 1px solid var(--border); background: var(--surface); box-shadow: 0 22px 80px #0006; }
 .auth-form h2 { margin-top: 0; }
 .auth-form label { display: grid; gap: .4rem; margin: 1rem 0; color: var(--muted); font-size: .85rem; }
@@ -84,6 +89,8 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 .ingestion-form textarea { resize: vertical; min-height: 260px; line-height: 1.55; }
 .ingestion-form input:focus, .ingestion-form textarea:focus, .ingestion-form select:focus { border-color: var(--accent); }
 .ingestion-form .primary { justify-self: end; }
+.ingestion-notice { color: #d8a366; border-left: 2px solid #d8a366; padding: .65rem .8rem; background: #211a10; }
+.ingestion-submit { display: flex; justify-content: flex-end; gap: .6rem; }
 .proposal-summary { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 1rem; border: 1px solid var(--border); background: var(--surface); }
 .proposal-summary > div { display: grid; gap: .25rem; }
 .proposal-summary span, .proposal-note small { color: var(--muted); font-size: .75rem; }
@@ -111,14 +118,19 @@ button:disabled { opacity: .42; cursor: not-allowed; }
 @media (max-width: 800px) {
   .auth-shell { grid-template-columns: 1fr; padding: 2rem 1.2rem; gap: 2rem; }
   .auth-copy h1 { font-size: 2.7rem; }
-  .workspace { grid-template: 52px minmax(0, 1fr) 58px / 1fr; }
+  .workspace { height: 100dvh; grid-template: 52px minmax(0, 1fr) calc(58px + env(safe-area-inset-bottom)) / 1fr; }
   .topbar .search, .topbar .account, .topbar > button { display: none; }
   .topbar { justify-content: space-between; }
   .explorer { display: none; }
+  .workspace.mobile-files .explorer { display: block; grid-row: 2; border-right: 0; }
+  .workspace.mobile-files .work-area { display: none; }
   .note-layout { grid-template-columns: 1fr; }
   .context-panel { display: none; }
+  .workspace.mobile-links .editor-pane { display: none; }
+  .workspace.mobile-links .context-panel { display: block; border-left: 0; }
   .mobile-nav { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--border); background: #0d1219; }
-  .mobile-nav button { border: 0; padding: .35rem .1rem; font-size: .72rem; }
+  .mobile-nav button { border: 0; padding: .35rem .1rem calc(.35rem + env(safe-area-inset-bottom)); font-size: .72rem; }
+  .mobile-nav button.active { color: var(--accent); box-shadow: inset 0 2px var(--accent); }
   .note-header { padding: .5rem .7rem; }
   .note-header > div:last-child .save-state { display: none; }
   .empty-note { padding: 1.5rem; }

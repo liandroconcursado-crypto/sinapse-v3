@@ -9,8 +9,12 @@ import { CodeEditor } from "@/components/editor/code-editor";
 import { MarkdownPreview } from "@/components/editor/markdown-preview";
 import { GraphView } from "@/components/graph/graph-view";
 import { IngestionPanel } from "@/components/ingestion/ingestion-panel";
+import { QuickCapture } from "@/components/onboarding/quick-capture";
+import { InstallAppButton } from "@/components/pwa/install-app-button";
 
 type VaultPayload = { vaultId: string; notes: NoteRecord[] };
+type MobilePane = "files" | "note" | "graph" | "ai" | "links";
+type IngestionSeed = { id: number; text: string; sourceName: string; notice?: string };
 
 async function jsonRequest<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, init);
@@ -27,6 +31,8 @@ export function WorkspaceShell({ userName }: { userName: string }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showGraph, setShowGraph] = useState(false);
   const [showIngestion, setShowIngestion] = useState(false);
+  const [mobilePane, setMobilePane] = useState<MobilePane>("note");
+  const [ingestionSeed, setIngestionSeed] = useState<IngestionSeed>({ id: 0, text: "", sourceName: "Texto colado" });
   const vault = useQuery({ queryKey: ["vault"], queryFn: () => jsonRequest<VaultPayload>("/api/vault") });
   const vaultId = vault.data?.vaultId;
   const activeSelectedId = selectedId ?? vault.data?.notes[0]?.id ?? null;
@@ -64,10 +70,16 @@ export function WorkspaceShell({ userName }: { userName: string }) {
         }),
       });
     },
-    onSuccess: async (note) => { await refreshVault(); setSelectedId(note.id); setShowGraph(false); setShowIngestion(false); },
+    onSuccess: async (note) => { await refreshVault(); setSelectedId(note.id); setShowGraph(false); setShowIngestion(false); setMobilePane("note"); },
   });
 
-  const openNote = useCallback((id: string) => { setSelectedId(id); setShowGraph(false); setShowIngestion(false); }, []);
+  const openNote = useCallback((id: string) => { setSelectedId(id); setShowGraph(false); setShowIngestion(false); setMobilePane("note"); }, []);
+  const openIngestion = useCallback((text = "", sourceName = "Texto colado", notice?: string) => {
+    setIngestionSeed((current) => ({ id: current.id + 1, text, sourceName, notice }));
+    setShowIngestion(true);
+    setShowGraph(false);
+    setMobilePane("ai");
+  }, []);
   const folders = useMemo(() => {
     const result = new Map<string, NoteRecord[]>();
     for (const note of vault.data?.notes ?? []) {
@@ -81,13 +93,14 @@ export function WorkspaceShell({ userName }: { userName: string }) {
   if (vault.error) return <main className="center-state error-state">{vault.error.message}<br /><small>Inicie o PostgreSQL e aplique a migration.</small></main>;
 
   return (
-    <main className="workspace">
+    <main className={`workspace mobile-${mobilePane}`}>
       <header className="topbar">
         <strong className="brand">SINAPSE</strong>
         <input className="search" placeholder="Buscar no vault" aria-label="Buscar no vault" />
-        <button onClick={() => { setShowIngestion((current) => !current); setShowGraph(false); }}>Entrada IA</button>
-        <button onClick={() => { setShowGraph((current) => !current); setShowIngestion(false); }}>{showGraph ? "Nota" : "Grafo"}</button>
+        <button onClick={() => showIngestion ? setShowIngestion(false) : openIngestion()}>Entrada IA</button>
+        <button onClick={() => { setShowGraph((current) => !current); setShowIngestion(false); setMobilePane(showGraph ? "note" : "graph"); }}>{showGraph ? "Nota" : "Grafo"}</button>
         <a className="button-link" href={`/api/vault/export?vaultId=${vaultId}`}>Exportar</a>
+        <InstallAppButton />
         <button className="account" onClick={() => authClient.signOut().then(() => window.location.reload())}>{userName} · sair</button>
       </header>
       <aside className="explorer">
@@ -100,18 +113,22 @@ export function WorkspaceShell({ userName }: { userName: string }) {
         </section>)}
       </aside>
       <section className="work-area">
-        {showIngestion && vaultId ? <IngestionPanel vaultId={vaultId} onApplied={refreshVault} /> : showGraph && graph.data ? <GraphView data={graph.data} onOpenNote={openNote} /> : detail.data ? (
+        {showIngestion && vaultId ? <IngestionPanel key={ingestionSeed.id} vaultId={vaultId} onApplied={refreshVault} initialText={ingestionSeed.text} initialSourceName={ingestionSeed.sourceName} notice={ingestionSeed.notice} /> : showGraph && graph.data ? <GraphView data={graph.data} onOpenNote={openNote} /> : detail.data ? (
           <NoteWorkspace key={detail.data.id} note={detail.data} onOpen={openNote} onCreate={(title) => create.mutate(title)} onSaved={refreshVault} />
         ) : (
           <div className="empty-note">
             <p className="eyebrow">PRIMEIRA NOTA</p>
             <h1>Jogue a bagunça aqui.<br />O SINAPSE organiza.</h1>
-            <div className="entry-modes"><button disabled>Falar</button><button onClick={() => create.mutate("Nova nota")}>Escrever</button><button onClick={() => setShowIngestion(true)}>Colar texto</button><button disabled>Importar arquivo</button></div>
+            <QuickCapture onWrite={() => create.mutate("Nova nota")} onText={openIngestion} />
           </div>
         )}
       </section>
       <nav className="mobile-nav" aria-label="Navegação móvel">
-        <button>Arquivos</button><button onClick={() => { setShowGraph(false); setShowIngestion(false); }}>Nota</button><button onClick={() => { setShowGraph(true); setShowIngestion(false); }}>Grafo</button><button onClick={() => { setShowIngestion(true); setShowGraph(false); }}>IA</button><button>Links</button>
+        <button className={mobilePane === "files" ? "active" : ""} onClick={() => setMobilePane("files")}>Arquivos</button>
+        <button className={mobilePane === "note" ? "active" : ""} onClick={() => { setShowGraph(false); setShowIngestion(false); setMobilePane("note"); }}>Nota</button>
+        <button className={mobilePane === "graph" ? "active" : ""} onClick={() => { setShowGraph(true); setShowIngestion(false); setMobilePane("graph"); }}>Grafo</button>
+        <button className={mobilePane === "ai" ? "active" : ""} onClick={() => openIngestion()}>IA</button>
+        <button className={mobilePane === "links" ? "active" : ""} onClick={() => { setShowGraph(false); setShowIngestion(false); setMobilePane("links"); }}>Links</button>
       </nav>
     </main>
   );
