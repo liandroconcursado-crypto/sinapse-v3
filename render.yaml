@@ -6,8 +6,7 @@ services:
     region: virginia
     branch: main
     buildCommand: pnpm install --frozen-lockfile && pnpm build
-    preDeployCommand: pnpm db:migrate
-    startCommand: pnpm start
+    startCommand: pnpm db:migrate && pnpm start
     healthCheckPath: /api/health
     autoDeployTrigger: checksPass
     envVars:

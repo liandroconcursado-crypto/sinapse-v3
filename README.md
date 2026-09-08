@@ -60,4 +60,4 @@ Em navegadores compatíveis, use **Instalar app** para adicionar o SINAPSE ao co
 
 ## Beta no Render
 
-O `render.yaml` provisiona o serviço web e um PostgreSQL na mesma região, gera o segredo de autenticação e aplica migrations antes de cada deploy. O plano gratuito é apropriado apenas para o beta: o serviço pode hibernar após inatividade e o banco expira em 30 dias.
+O `render.yaml` provisiona o serviço web e um PostgreSQL na mesma região, gera o segredo de autenticação e aplica migrations idempotentes antes de iniciar a instância. O plano gratuito é apropriado apenas para o beta: o serviço pode hibernar após inatividade e o banco expira em 30 dias.
