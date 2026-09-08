@@ -57,3 +57,7 @@ Os testes de integração exigem `TEST_DATABASE_URL` ou `DATABASE_URL` apontando
 Fases 0–5 disponíveis no primeiro corte funcional. A ingestão aceita até 200 mil caracteres, persiste o progresso do job, separa conteúdo explícito, inferido e sugerido, mostra uma proposta antes de gravar e aplica a seleção em uma transação idempotente. O provider `fake` não usa rede nem credenciais e cobre o fixture de aceite de forma determinística.
 
 Em navegadores compatíveis, use **Instalar app** para adicionar o SINAPSE ao computador ou celular. O ditado usa a Web Speech API quando disponível e apresenta entrada textual como fallback. O posicionamento de produto e monetização está registrado em `docs/adr/0003-distribuicao-e-monetizacao.md`.
+
+## Beta no Render
+
+O `render.yaml` provisiona o serviço web e um PostgreSQL na mesma região, gera o segredo de autenticação e aplica migrations antes de cada deploy. O plano gratuito é apropriado apenas para o beta: o serviço pode hibernar após inatividade e o banco expira em 30 dias.
