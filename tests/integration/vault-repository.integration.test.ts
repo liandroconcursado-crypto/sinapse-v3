@@ -167,7 +167,7 @@ describeWithDatabase("vault repository with PostgreSQL", () => {
     const metadata = await metadataRoute.GET(new Request("http://127.0.0.1:3000/.well-known/oauth-protected-resource/mcp"));
     expect(metadata.status).toBe(200);
     await expect(metadata.json()).resolves.toEqual(expect.objectContaining({
-      resource: "http://127.0.0.1:3000/mcp",
+      resource: "http://localhost:3000/mcp",
       scopes_supported: expect.arrayContaining(["sinapse:memory"]),
     }));
   });
