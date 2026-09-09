@@ -135,7 +135,7 @@ describeWithDatabase("vault repository with PostgreSQL", () => {
     const text = await readFile("fixtures/professor-historia.md", "utf8");
     const proposal = await service.createProposal({ userId: userA }, { vaultId: vaultA, mode: "expand", sourceName: "Fixture professor", text, autoApply: false });
     expect(proposal.status).toBe("awaiting_review");
-    expect(proposal.proposal?.notes.map((note) => note.kind)).toEqual(expect.arrayContaining(["project", "area", "knowledge", "source", "decision", "action"]));
+    expect(proposal.proposal?.notes.map((note) => note.kind)).toEqual(expect.arrayContaining(["context", "project", "knowledge", "decision", "action", "journal"]));
     const selected = proposal.proposal?.notes.filter((note) => note.operation !== "possible_duplicate").map((note) => note.temporaryId) ?? [];
     const committed = await service.commit({ userId: userA }, proposal.ingestionId, { selectedTemporaryIds: selected });
     expect(committed.status).toBe("committed");
