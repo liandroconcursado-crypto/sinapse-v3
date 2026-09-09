@@ -44,5 +44,7 @@ jobs:
       - run: pnpm test:unit
       - run: pnpm test:integration
       - run: pnpm build
-      - run: pnpm exec playwright install --with-deps chromium
+      # GitHub's Ubuntu image already carries the shared browser libraries.
+      # Avoid apt here: unrelated third-party repository races can otherwise block CI.
+      - run: pnpm exec playwright install chromium
       - run: pnpm test:e2e
