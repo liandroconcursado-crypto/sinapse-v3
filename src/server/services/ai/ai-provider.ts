@@ -16,6 +16,12 @@ export type VaultIndexEntry = { id: string; path: string; title: string; normali
 export interface AIProvider {
   readonly name: string;
   extractChunk(input: { chunk: TextChunk }): Promise<ChunkExtraction>;
-  mergeExtractions(input: { extractions: ChunkExtraction[]; vaultIndex: VaultIndexEntry[]; inputSummary: string }): Promise<IngestionProposal>;
+  mergeExtractions(input: {
+    extractions: ChunkExtraction[];
+    vaultIndex: VaultIndexEntry[];
+    inputSummary: string;
+    sourceName: string;
+    mode: "build" | "expand";
+  }): Promise<IngestionProposal>;
   answerFromVault(input: { question: string; notes: Array<{ id: string; title: string; contentMarkdown: string }> }): Promise<{ answer: string; sourceNoteIds: string[] }>;
 }

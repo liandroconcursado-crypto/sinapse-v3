@@ -10,6 +10,8 @@ Conhecimento pessoal costuma ficar espalhado em conversas com IA, PDFs, notas, l
 
 O usuário envia material bruto. O SINAPSE propõe notas Markdown, pastas, conexões e contexto; o usuário revisa e aplica. O resultado continua sendo dele e pode ser aberto no Obsidian.
 
+A conversa é a interface principal: o usuário fala naturalmente no app ou no ChatGPT/Codex conectado, e o SINAPSE recupera e consolida memória por ferramentas. O editor manual é secundário, usado para inspeção e correção precisa.
+
 ## 3. Usuário inicial
 
 Profissionais, estudantes, professores, pesquisadores e criadores que acumulam contexto em muitas fontes e querem recuperar relações, decisões e próximas ações sem classificar tudo manualmente.
@@ -90,6 +92,8 @@ Modos:
 - Limpar: sugere merges/renomes; nunca executa destruição silenciosa.
 - Contexto: atualiza `00 - Contexto/Contexto Mestre.md`.
 - Perguntar: responde com evidência do vault e aponta notas usadas.
+
+O fallback local não depende de API de modelo. Para compreensão linguística avançada sem chave de API do produto, o backend expõe ferramentas por um plugin MCP autenticado; ChatGPT/Codex consultam e gravam no cérebro durante a conversa normal.
 
 ### 6.6 Exportar
 

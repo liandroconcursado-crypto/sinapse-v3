@@ -1,0 +1,120 @@
+{
+  "$schema": "https://developers.openai.com/apps-sdk/schemas/chatgpt-app-submission.v1.json",
+  "schema_version": 1,
+  "app_info": {
+    "display_name": "SINAPSE",
+    "subtitle": "Memória pessoal conectada",
+    "description": "SINAPSE ajuda o usuário a recuperar contexto e organizar conhecimento, decisões, ideias e fontes em um vault Markdown portátil com links e backlinks.",
+    "category": "PRODUCTIVITY"
+  },
+  "tools": {
+    "search": {
+      "annotations": { "readOnlyHint": true, "openWorldHint": false, "destructiveHint": false },
+      "justifications": {
+        "read_only_justification": "Apenas pesquisa notas existentes na conta autenticada sem alterar o vault.",
+        "open_world_justification": "Não publica conteúdo nem modifica sistemas externos.",
+        "destructive_justification": "Não apaga, sobrescreve ou revoga dados."
+      }
+    },
+    "fetch": {
+      "annotations": { "readOnlyHint": true, "openWorldHint": false, "destructiveHint": false },
+      "justifications": {
+        "read_only_justification": "Apenas recupera uma nota existente e suas conexões na conta autenticada.",
+        "open_world_justification": "A leitura permanece dentro do vault privado do usuário.",
+        "destructive_justification": "Não realiza qualquer alteração ou remoção."
+      }
+    },
+    "get_context": {
+      "annotations": { "readOnlyHint": true, "openWorldHint": false, "destructiveHint": false },
+      "justifications": {
+        "read_only_justification": "Classifica e retorna memórias já armazenadas sem gravar novos dados.",
+        "open_world_justification": "Não envia nem publica conteúdo em serviços externos.",
+        "destructive_justification": "Não altera o conteúdo ou a estrutura do vault."
+      }
+    },
+    "capture_memory": {
+      "annotations": { "readOnlyHint": false, "openWorldHint": false, "destructiveHint": false },
+      "justifications": {
+        "read_only_justification": "Cria ou atualiza notas e conexões no vault privado do usuário, ou prepara uma proposta quando solicitado.",
+        "open_world_justification": "As alterações ficam no sistema privado do SINAPSE e não são publicadas externamente.",
+        "destructive_justification": "A ingestão expande ou atualiza a memória e não oferece operação de exclusão."
+      }
+    },
+    "commit_memory_update": {
+      "annotations": { "readOnlyHint": false, "openWorldHint": false, "destructiveHint": false },
+      "justifications": {
+        "read_only_justification": "Confirma e grava no vault privado somente as notas selecionadas de uma proposta pendente.",
+        "open_world_justification": "A confirmação não publica conteúdo nem modifica terceiros.",
+        "destructive_justification": "Não aceita propostas marcadas como possível duplicata e não remove notas existentes."
+      }
+    }
+  },
+  "test_cases": [
+    {
+      "description": "Buscar uma decisão previamente armazenada.",
+      "user_prompt": "Procure no meu SINAPSE a decisão que tomei sobre o modelo de monetização.",
+      "file_attachment_urls": null,
+      "tools_triggered": "search",
+      "expected_output": "Retorna as notas mais relevantes com título, caminho e trecho suficiente para identificar a decisão.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Abrir uma nota escolhida e suas conexões.",
+      "user_prompt": "Abra essa nota do SINAPSE e mostre também o que aponta para ela.",
+      "file_attachment_urls": null,
+      "tools_triggered": "fetch",
+      "expected_output": "Retorna o Markdown completo da nota, links de saída e backlinks.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Recuperar contexto antes de continuar um projeto.",
+      "user_prompt": "Recupere meu contexto sobre o projeto SINAPSE antes de sugerir o próximo passo.",
+      "file_attachment_urls": null,
+      "tools_triggered": "get_context",
+      "expected_output": "Retorna o Contexto Mestre e as memórias mais relevantes para o projeto e a intenção atual.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Guardar conhecimento explícito de uma conversa.",
+      "user_prompt": "Guarde no SINAPSE: decidi cobrar assinatura pela sincronização, mantendo o vault Markdown exportável.",
+      "file_attachment_urls": null,
+      "tools_triggered": "capture_memory",
+      "expected_output": "Organiza a informação explícita em notas conectadas e informa quais notas foram aplicadas.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Confirmar parte de uma proposta revisável.",
+      "user_prompt": "Confirme apenas as duas notas que selecionei nessa proposta do SINAPSE.",
+      "file_attachment_urls": null,
+      "tools_triggered": "commit_memory_update",
+      "expected_output": "Grava somente os identificadores selecionados e retorna as notas efetivamente aplicadas.",
+      "expected_output_url": null
+    }
+  ],
+  "negative_test_cases": [
+    {
+      "description": "Não usar para uma pergunta geral sem relação com memória pessoal.",
+      "user_prompt": "Qual é a capital da França?",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "O app não deve ser invocado porque a pergunta não depende do vault do usuário.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Não usar para enviar mensagens a terceiros.",
+      "user_prompt": "Envie um e-mail para minha equipe marcando uma reunião amanhã.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "O app não deve ser invocado porque não envia e-mails nem agenda reuniões.",
+      "expected_output_url": null
+    },
+    {
+      "description": "Não usar para apagar dados do usuário.",
+      "user_prompt": "Apague definitivamente todas as minhas notas.",
+      "file_attachment_urls": null,
+      "tools_triggered": null,
+      "expected_output": "O app não deve ser invocado porque não expõe ferramentas de exclusão.",
+      "expected_output_url": null
+    }
+  ]
+}

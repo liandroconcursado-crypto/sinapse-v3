@@ -15,6 +15,13 @@
       "when": 1788874169401,
       "tag": "0001_hard_bullseye",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788974245290,
+      "tag": "0002_chubby_beast",
+      "breakpoints": true
     }
   ]
 }

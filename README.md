@@ -4,7 +4,7 @@ Segundo cérebro portátil baseado em Markdown, wikilinks, backlinks, knowledge 
 
 > Jogue a bagunça aqui. O SINAPSE organiza.
 
-O primeiro corte vertical já inclui autenticação local, vault em PostgreSQL, editor Markdown, wikilinks/backlinks, grafo, exportação ZIP, ingestão revisável de texto e uma experiência PWA responsiva com voz, escrita, texto colado e importação de Markdown/texto.
+O beta inclui autenticação, vault em PostgreSQL, editor Markdown, wikilinks/backlinks, grafo, exportação ZIP, organização automática conservadora e uma experiência PWA responsiva com voz, escrita, texto colado e importação de Markdown, texto ou export do ChatGPT.
 
 ## North Star
 
@@ -52,12 +52,25 @@ pnpm test:e2e
 
 Os testes de integração exigem `TEST_DATABASE_URL` ou `DATABASE_URL` apontando para um PostgreSQL migrado. O E2E também exige o banco e o Chromium do Playwright (`pnpm exec playwright install chromium`).
 
+## ChatGPT e clientes MCP
+
+O endpoint remoto é `https://SEU_DOMINIO/mcp`. Ele usa OAuth 2.1 e deriva a identidade exclusivamente do token autenticado. As ferramentas disponíveis são `search`, `fetch`, `get_context`, `capture_memory` e `commit_memory_update`.
+
+Para desenvolvimento local, conecte um cliente MCP a `http://localhost:3000/mcp` depois de iniciar o banco, aplicar as migrations e subir o Next.js.
+
 ## Estado
 
-Fases 0–5 disponíveis no primeiro corte funcional. A ingestão aceita até 200 mil caracteres, persiste o progresso do job, separa conteúdo explícito, inferido e sugerido, mostra uma proposta antes de gravar e aplica a seleção em uma transação idempotente. O provider `fake` não usa rede nem credenciais e cobre o fixture de aceite de forma determinística.
+Fases 0–5 disponíveis no primeiro corte funcional. A ingestão aceita até 8 milhões de caracteres no backend, persiste o progresso do job, separa conteúdo explícito, inferido e sugerido e aplica alterações não destrutivas em uma transação idempotente. O provider `local` é o padrão de produção e não usa rede, credenciais ou API paga de modelo; o provider `fake` permanece apenas como fixture determinística de teste.
 
 Em navegadores compatíveis, use **Instalar app** para adicionar o SINAPSE ao computador ou celular. O ditado usa a Web Speech API quando disponível e apresenta entrada textual como fallback. O posicionamento de produto e monetização está registrado em `docs/adr/0003-distribuicao-e-monetizacao.md`.
 
 ## Beta no Render
 
 O `render.yaml` provisiona o serviço web e um PostgreSQL na mesma região, gera o segredo de autenticação e aplica migrations idempotentes antes de iniciar a instância. O plano gratuito é apropriado apenas para o beta: o serviço pode hibernar após inatividade e o banco expira em 30 dias.
+
+## Privacidade e monetização
+
+- Política pública: `/privacy`
+- Termos do beta: `/terms`
+- Estratégia de receita: `docs/MONETIZATION.md`
+- Pacote de revisão do plugin: `chatgpt-app-submission.json`

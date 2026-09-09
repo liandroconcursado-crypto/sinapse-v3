@@ -17,7 +17,7 @@ services:
       - key: BETTER_AUTH_SECRET
         generateValue: true
       - key: AI_PROVIDER
-        value: fake
+        value: local
       - key: NODE_VERSION
         value: 22.22.0
 

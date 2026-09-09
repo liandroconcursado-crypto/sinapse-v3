@@ -24,17 +24,24 @@ export class IngestionService {
       rawText: text,
       provider: provider.name,
     });
-    if (job.status === "awaiting_review" || job.status === "committed") return job;
+    if (job.status === "committed") return job;
+    if (job.status === "awaiting_review") {
+      if (!input.autoApply || !job.proposal) return job;
+      return this.repository.commit(context, job.ingestionId, job.proposal.notes.filter((note) => note.operation !== "possible_duplicate").map((note) => note.temporaryId));
+    }
 
     try {
       await this.repository.updateJob(context, job.ingestionId, { status: "running", stage: "normalizing", progress: 10, ingestionStatus: "processing", incrementAttempts: true });
       const chunks = chunkText(text);
       await this.repository.updateJob(context, job.ingestionId, { status: "running", stage: "chunking", progress: 20, ingestionStatus: "processing" });
       const extractions = [];
+      const progressInterval = Math.max(1, Math.ceil(chunks.length / 20));
       for (let index = 0; index < chunks.length; index += 1) {
         extractions.push(await provider.extractChunk({ chunk: chunks[index] }));
-        const progress = 25 + Math.round(((index + 1) / chunks.length) * 45);
-        await this.repository.updateJob(context, job.ingestionId, { status: "running", stage: "extracting", progress, ingestionStatus: "processing" });
+        if ((index + 1) % progressInterval === 0 || index === chunks.length - 1) {
+          const progress = 25 + Math.round(((index + 1) / chunks.length) * 45);
+          await this.repository.updateJob(context, job.ingestionId, { status: "running", stage: "extracting", progress, ingestionStatus: "processing" });
+        }
       }
       await this.repository.updateJob(context, job.ingestionId, { status: "running", stage: "merging", progress: 75, ingestionStatus: "processing" });
       const notes = await this.vaults.listNotes(context, input.vaultId);
@@ -42,6 +49,8 @@ export class IngestionService {
         extractions,
         vaultIndex: notes.map((note) => ({ ...note, normalizedTitle: normalizeWikiTarget(note.title) })),
         inputSummary: text.slice(0, 500),
+        sourceName: input.sourceName,
+        mode: input.mode,
       }));
       await this.repository.updateJob(context, job.ingestionId, {
         status: "running",
@@ -49,7 +58,10 @@ export class IngestionService {
         progress: 90,
         ingestionStatus: "processing",
       });
-      return this.repository.updateJob(context, job.ingestionId, { status: "awaiting_review", stage: "awaiting_review", progress: 95, ingestionStatus: "awaiting_review", proposal });
+      const awaiting = await this.repository.updateJob(context, job.ingestionId, { status: "awaiting_review", stage: "awaiting_review", progress: 95, ingestionStatus: "awaiting_review", proposal });
+      if (!input.autoApply) return awaiting;
+      const safeIds = proposal.notes.filter((note) => note.operation !== "possible_duplicate").map((note) => note.temporaryId);
+      return this.repository.commit(context, job.ingestionId, safeIds);
     } catch (error) {
       await this.repository.updateJob(context, job.ingestionId, {
         status: "failed",

@@ -41,7 +41,7 @@ export function IngestionPanel({ vaultId, onApplied, initialText = "", initialSo
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const abortController = useRef<AbortController | null>(null);
   const propose = useMutation({
-    mutationFn: (input: { text: string; sourceName: string; mode: "build" | "expand" }) => {
+    mutationFn: (input: { text: string; sourceName: string; mode: "build" | "expand"; autoApply: boolean }) => {
       const controller = new AbortController();
       abortController.current = controller;
       return requestJob("/api/ingestions", { vaultId, ...input }, controller.signal);
@@ -67,6 +67,7 @@ export function IngestionPanel({ vaultId, onApplied, initialText = "", initialSo
       text: String(fields.get("text")),
       sourceName: String(fields.get("sourceName")) || "Texto colado",
       mode: fields.get("mode") === "build" ? "build" : "expand",
+      autoApply: fields.get("review") !== "on",
     });
   }
 
@@ -77,7 +78,7 @@ export function IngestionPanel({ vaultId, onApplied, initialText = "", initialSo
     <header>
       <p className="eyebrow">CONSTRUIR COM IA</p>
       <h1>Jogue a bagunça aqui.</h1>
-      <p>O provider falso organiza localmente e prepara uma proposta. Nada é gravado no vault antes da sua revisão.</p>
+      <p>Texto, fala ou conversas viram contexto, projetos, conhecimento, decisões, ações, histórico e conexões — sem API paga.</p>
     </header>
     {notice && <p className="ingestion-notice" role="status">{notice}</p>}
     {!proposal ? <form className="ingestion-form" onSubmit={submit}>
@@ -85,11 +86,12 @@ export function IngestionPanel({ vaultId, onApplied, initialText = "", initialSo
         <label>Fonte<input name="sourceName" defaultValue={initialSourceName} maxLength={240} /></label>
         <label>Modo<select name="mode" defaultValue="expand"><option value="expand">Expandir</option><option value="build">Construir</option></select></label>
       </div>
-      <label>Conteúdo<textarea name="text" required maxLength={200_000} rows={16} defaultValue={initialText} placeholder="Cole uma transcrição, relato ou texto de até 200 mil caracteres…" /></label>
+        <label>Conteúdo<textarea name="text" required maxLength={8_000_000} rows={16} defaultValue={initialText} placeholder="Fale, cole uma conversa ou importe o histórico do ChatGPT…" /></label>
+        <label className="review-choice"><input name="review" type="checkbox" /> Revisar a proposta antes de gravar (opcional)</label>
       {propose.error && <p className="form-error" role="alert">{propose.error.message}</p>}
       <div className="ingestion-submit">
         {propose.isPending && <button type="button" onClick={() => abortController.current?.abort()}>Parar de aguardar</button>}
-        <button className="primary" disabled={propose.isPending}>{propose.isPending ? "Normalizando · extraindo · mesclando…" : propose.isError ? "Tentar novamente" : "Preparar proposta"}</button>
+        <button className="primary" disabled={propose.isPending}>{propose.isPending ? "Construindo memórias e sinapses…" : propose.isError ? "Tentar novamente" : "Organizar no meu cérebro"}</button>
       </div>
     </form> : <div className="proposal">
       <div className="proposal-summary"><div><span>Prévia pronta</span><strong>{proposal.notes.length} notas propostas</strong></div><span>{job.progress}% · {job.stage}</span></div>

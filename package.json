@@ -23,11 +23,14 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {
+    "@better-auth/cimd": "1.7.3",
+    "@better-auth/mcp": "1.7.3",
     "@codemirror/commands": "^6.11.0",
     "@codemirror/lang-markdown": "latest",
     "@codemirror/state": "latest",
     "@codemirror/theme-one-dark": "latest",
     "@codemirror/view": "latest",
+    "@modelcontextprotocol/server": "^2.0.0",
     "@tanstack/react-query": "latest",
     "better-auth": "latest",
     "drizzle-orm": "latest",

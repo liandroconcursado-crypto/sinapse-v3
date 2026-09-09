@@ -56,7 +56,8 @@ export const createIngestionInputSchema = z.object({
   vaultId: z.string().uuid(),
   mode: z.enum(["build", "expand"]).default("expand"),
   sourceName: z.string().trim().min(1).max(240).default("Texto colado"),
-  text: z.string().trim().min(1).max(200_000),
+  text: z.string().trim().min(1).max(8_000_000),
+  autoApply: z.boolean().default(true),
 });
 
 export const commitIngestionInputSchema = z.object({

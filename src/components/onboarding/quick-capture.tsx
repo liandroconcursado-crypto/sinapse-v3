@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent } from "react";
+import { parseKnowledgeFile } from "@/domain/ingestion/chat-export";
 
 type SpeechResult = { isFinal: boolean; 0: { transcript: string } };
 type SpeechResultList = { length: number; [index: number]: SpeechResult };
@@ -79,20 +80,27 @@ export function QuickCapture({
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    if (!/\.(md|txt)$/i.test(file.name)) {
-      setMessage("Use um arquivo Markdown (.md) ou texto simples (.txt).");
+    if (!/\.(md|txt|json)$/i.test(file.name)) {
+      setMessage("Use Markdown (.md), texto (.txt) ou uma exportação de conversas (.json).");
       return;
     }
-    if (file.size > 800_000) {
-      setMessage("O arquivo é grande demais para esta entrada. O limite atual é 200 mil caracteres.");
+    if (file.size > 25_000_000) {
+      setMessage("O arquivo ultrapassa 25 MB. Divida a exportação em partes para esta versão beta.");
       return;
     }
-    const text = await file.text();
-    if (!text.trim() || text.length > 200_000) {
-      setMessage(text.trim() ? "O conteúdo ultrapassa 200 mil caracteres." : "O arquivo está vazio.");
+    const raw = await file.text();
+    let parsed: { text: string; notice?: string };
+    try {
+      parsed = parseKnowledgeFile(file.name, raw);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Não foi possível ler o arquivo.");
       return;
     }
-    onText(text, file.name);
+    if (!parsed.text.trim() || parsed.text.length > 8_000_000) {
+      setMessage(parsed.text.trim() ? "O conteúdo processado ultrapassa o limite técnico desta etapa." : "O arquivo está vazio.");
+      return;
+    }
+    onText(parsed.text, file.name, parsed.notice);
   }
 
   return <div className="quick-capture">
@@ -104,7 +112,7 @@ export function QuickCapture({
       <button onClick={() => onText("", "Texto colado")}>Colar texto</button>
       <button onClick={() => fileInput.current?.click()}>Importar arquivo</button>
     </div>
-    <input ref={fileInput} className="visually-hidden" type="file" accept=".md,.txt,text/markdown,text/plain" onChange={importFile} />
+    <input ref={fileInput} className="visually-hidden" type="file" accept=".md,.txt,.json,text/markdown,text/plain,application/json" onChange={importFile} />
     {message && <p className="capture-message" role="status">{message}</p>}
   </div>;
 }

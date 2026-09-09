@@ -133,7 +133,7 @@ describeWithDatabase("vault repository with PostgreSQL", () => {
     const { IngestionService } = await import("@/server/services/ingestion/ingestion-service");
     const service = new IngestionService();
     const text = await readFile("fixtures/professor-historia.md", "utf8");
-    const proposal = await service.createProposal({ userId: userA }, { vaultId: vaultA, mode: "expand", sourceName: "Fixture professor", text });
+    const proposal = await service.createProposal({ userId: userA }, { vaultId: vaultA, mode: "expand", sourceName: "Fixture professor", text, autoApply: false });
     expect(proposal.status).toBe("awaiting_review");
     expect(proposal.proposal?.notes.map((note) => note.kind)).toEqual(expect.arrayContaining(["project", "area", "knowledge", "source", "decision", "action"]));
     const selected = proposal.proposal?.notes.filter((note) => note.operation !== "possible_duplicate").map((note) => note.temporaryId) ?? [];
@@ -141,7 +141,7 @@ describeWithDatabase("vault repository with PostgreSQL", () => {
     expect(committed.status).toBe("committed");
     const countAfterFirstCommit = (await repository.listNotes({ userId: userA }, vaultA)).length;
 
-    const repeated = await service.createProposal({ userId: userA }, { vaultId: vaultA, mode: "expand", sourceName: "Fixture repetida", text });
+    const repeated = await service.createProposal({ userId: userA }, { vaultId: vaultA, mode: "expand", sourceName: "Fixture repetida", text, autoApply: false });
     const repeatedCommit = await service.commit({ userId: userA }, repeated.ingestionId, { selectedTemporaryIds: selected });
     expect(repeated.ingestionId).toBe(proposal.ingestionId);
     expect(repeatedCommit.commitResult).toEqual(committed.commitResult);
@@ -149,5 +149,16 @@ describeWithDatabase("vault repository with PostgreSQL", () => {
 
     const roma = (await repository.listNotes({ userId: userA }, vaultA)).find((note) => note.title === "Roma Antiga");
     expect(roma?.contentMarkdown).toContain("Conteúdo manual preservado.");
+  });
+
+  it("protege o endpoint MCP e anuncia a descoberta OAuth", async () => {
+    const { POST } = await import("@/app/mcp/route");
+    const response = await POST(new Request("http://127.0.0.1:3000/mcp", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: {} }),
+    }));
+    expect(response.status).toBe(401);
+    expect(response.headers.get("www-authenticate")).toContain("resource_metadata");
   });
 });

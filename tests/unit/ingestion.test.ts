@@ -1,9 +1,9 @@
-import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { chunkText, normalizeIngestionText } from "@/domain/ingestion/chunking";
 import { ingestionProposalSchema } from "@/domain/ingestion/schema";
 import { renderProposedMarkdown } from "@/domain/ingestion/render";
-import { FakeAIProvider } from "@/server/services/ai/fake-ai-provider";
+import { LocalMemoryProvider } from "@/server/services/ai/local-memory-provider";
+import { parseKnowledgeFile } from "@/domain/ingestion/chat-export";
 
 describe("ingestion domain", () => {
   it("divide 200 mil caracteres em chunks determinísticos e limitados", () => {
@@ -50,16 +50,26 @@ describe("ingestion domain", () => {
     expect(renderProposedMarkdown(proposal, "# Roma\n\nTexto manual importante.")).toContain("Nova síntese.");
   });
 
-  it("provider falso cobre as categorias da fixture sem transformar ideia futura em compromisso", async () => {
-    const text = await readFile("fixtures/professor-historia.md", "utf8");
-    const provider = new FakeAIProvider();
+  it("motor local generaliza projetos, contexto, decisões e ações sem fixture específica", async () => {
+    const text = "Eu sou pesquisadora em biologia. Estou desenvolvendo um projeto sobre manguezais. Decidi usar dados públicos porque preciso revisar a coleta. Meu próximo passo é verificar as séries históricas.";
+    const provider = new LocalMemoryProvider();
     const extractions = await Promise.all(chunkText(text, 4_000).map((chunk) => provider.extractChunk({ chunk })));
-    const proposal = await provider.mergeExtractions({ extractions, vaultIndex: [], inputSummary: text.slice(0, 300) });
+    const proposal = await provider.mergeExtractions({ extractions, vaultIndex: [], inputSummary: text, sourceName: "Conversa", mode: "build" });
     expect(proposal.notes.map((note) => note.kind)).toEqual(
-      expect.arrayContaining(["project", "area", "knowledge", "source", "decision", "action"]),
+      expect.arrayContaining(["context", "project", "decision", "action", "journal", "system"]),
     );
-    expect(proposal.notes.find((note) => note.title === "História em Contexto")?.epistemicStatus).toBe("suggested");
     expect(proposal.notes.find((note) => note.kind === "decision")?.epistemicStatus).toBe("explicit");
     expect(proposal.notes.every((note) => note.epistemicStatus === "suggested" || note.evidence.length > 0)).toBe(true);
+  });
+
+  it("transforma uma exportação do ChatGPT em conversa legível", () => {
+    const exported = JSON.stringify([{ title: "Projeto Manguezal", mapping: {
+      a: { message: { author: { role: "user" }, content: { parts: ["Quero retomar o projeto."] }, create_time: 1 } },
+      b: { message: { author: { role: "assistant" }, content: { parts: ["Vamos localizar as fontes."] }, create_time: 2 } },
+    } }]);
+    const parsed = parseKnowledgeFile("conversations.json", exported);
+    expect(parsed.text).toContain("# Conversa · Projeto Manguezal");
+    expect(parsed.text).toContain("**Usuário:** Quero retomar o projeto.");
+    expect(parsed.notice).toContain("1 conversas");
   });
 });
