@@ -12,13 +12,14 @@ test("revisa e aplica uma ingestão antes de alterar o vault", async ({ page }) 
   await page.getByRole("button", { name: "Entrada IA" }).click();
   await page.getByLabel("Fonte").fill("Relato E2E");
   await page.getByLabel("Conteúdo").fill(
-    "Sou professor de História no ensino médio. Quero melhorar as aulas sobre Roma, hoje muito baseadas em exposição oral e slides.",
+    "Meu nome é Marina e prefiro respostas objetivas. O Projeto Aurora organiza conhecimento científico. Decidi usar Markdown como formato principal. Preciso entrevistar três pesquisadoras.",
   );
-  await page.getByRole("button", { name: "Preparar proposta" }).click();
+  await page.getByLabel("Revisar a proposta antes de gravar (opcional)").check();
+  await page.getByRole("button", { name: "Organizar no meu cérebro" }).click();
 
   await expect(page.getByText("Prévia pronta")).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText("Ensino de História", { exact: true })).toBeVisible();
-  await expect(page.getByText("Melhorar aulas sobre Roma", { exact: true })).toBeVisible();
+  await expect(page.getByText("Contexto Mestre", { exact: true })).toBeVisible();
+  await expect(page.getByText("Importação · Relato E2E", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: /Aplicar selecionadas/ }).click();
 
   await expect(page.getByText(/Aplicado: \d+ notas criadas ou atualizadas/)).toBeVisible({ timeout: 15_000 });
