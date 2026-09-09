@@ -152,7 +152,10 @@ describeWithDatabase("vault repository with PostgreSQL", () => {
   });
 
   it("protege o endpoint MCP e anuncia a descoberta OAuth", async () => {
-    const { POST } = await import("@/app/mcp/route");
+    const [{ POST }, metadataRoute] = await Promise.all([
+      import("@/app/mcp/route"),
+      import("@/app/.well-known/oauth-protected-resource/mcp/route"),
+    ]);
     const response = await POST(new Request("http://127.0.0.1:3000/mcp", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -160,5 +163,12 @@ describeWithDatabase("vault repository with PostgreSQL", () => {
     }));
     expect(response.status).toBe(401);
     expect(response.headers.get("www-authenticate")).toContain("resource_metadata");
+
+    const metadata = await metadataRoute.GET(new Request("http://127.0.0.1:3000/.well-known/oauth-protected-resource/mcp"));
+    expect(metadata.status).toBe(200);
+    await expect(metadata.json()).resolves.toEqual(expect.objectContaining({
+      resource: "http://127.0.0.1:3000/mcp",
+      scopes_supported: expect.arrayContaining(["sinapse:memory"]),
+    }));
   });
 });
